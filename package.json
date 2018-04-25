@@ -1,0 +1,10 @@
+{
+  "name": "smart-things",
+  "version": "1.0.0",
+  "iotjs": {
+    "version": ">=1.0"
+  },
+  "description": "SmartThings Module",
+  "homepage": "https://github.com/hs0225/smart-things",
+  "license": "Apache 2.0"
+}

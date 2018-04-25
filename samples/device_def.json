@@ -1,0 +1,312 @@
+{
+  "device": [
+    {
+      "specification": {
+        "device": {
+          "deviceType": "oic.d.networkaudio",
+          "deviceName": "[network audio]",
+          "specVersion": "core.1.1.0",
+          "dataModelVersion": "res.1.1.0"
+        },
+        "platform": {
+          "manufacturerName": "yourmnid",
+          "manufacturerUrl": "http://www.samsung.com",
+          "manufacturingDate": "2017-01-01",
+          "modelNumber": "VD-NetworkAudio",
+          "platformVersion": "3.0",
+          "osVersion": "tizen",
+          "hardwareVersion": "TS01",
+          "firmwareVersion": "Virtual Device_0824",
+          "vendorId": "yourvid"
+        }
+      },
+      "resources": {
+        "single": [
+          {
+            "uri": "/capability/switch/main/0",
+            "types": [
+              "x.com.st.powerswitch"
+            ],
+            "interfaces": [
+              "oic.if.a",
+              "oic.if.baseline"
+            ],
+            "policy": 3
+          },
+          {
+            "uri": "/capability/audioVolume/main/0",
+            "types": [
+              "x.com.st.audiovolume"
+            ],
+            "interfaces": [
+              "oic.if.a",
+              "oic.if.baseline"
+            ],
+            "policy": 3
+          },
+          {
+            "uri": "/capability/mediaInputSource/main/0",
+            "types": [
+              "x.com.st.mediainputsource"
+            ],
+            "interfaces": [
+              "oic.if.a",
+              "oic.if.s",
+              "oic.if.baseline"
+            ],
+            "policy": 3
+          },
+          {
+            "uri": "/capability/mediaPlayback/main/0",
+            "types": [
+              "x.com.st.mediaplayer"
+            ],
+            "interfaces": [
+              "oic.if.a",
+              "oic.if.s",
+              "oic.if.baseline"
+            ],
+            "policy": 3
+          },
+          {
+            "uri": "/capability/mediaTrackControl/main/0",
+            "types": [
+              "x.com.st.mediatrackcontrol"
+            ],
+            "interfaces": [
+              "oic.if.a",
+              "oic.if.s",
+              "oic.if.baseline"
+            ],
+            "policy": 3
+          },
+          {
+            "uri": "/capability/mediaPlaybackRepeat/main/0",
+            "types": [
+              "x.com.st.mediarepeat"
+            ],
+            "interfaces": [
+              "oic.if.a",
+              "oic.if.s",
+              "oic.if.baseline"
+            ],
+            "policy": 3
+          },
+          {
+            "uri": "/capability/mediaPlaybackShuffle/main/0",
+            "types": [
+              "x.com.st.mediashuffle"
+            ],
+            "interfaces": [
+              "oic.if.a",
+              "oic.if.s",
+              "oic.if.baseline"
+            ],
+            "policy": 3
+          },
+          {
+            "uri": "/capability/audioTrackData/main/0",
+            "types": [
+              "x.com.st.audiotrackdata"
+            ],
+            "interfaces": [
+              "oic.if.s",
+              "oic.if.baseline"
+            ],
+            "policy": 3
+          }
+        ]
+      }
+    }
+  ],
+  "resourceTypes": [
+    {
+      "type": "x.com.st.powerswitch",
+      "properties": [
+        {
+          "key": "power",
+          "type": 3,
+          "mandatory": true,
+          "rw": 3
+        }
+      ]
+    },
+    {
+      "type": "x.com.st.audiovolume",
+      "properties": [
+        {
+          "key": "volume",
+          "type": 1,
+          "mandatory": true,
+          "rw": 3
+        },
+        {
+          "key": "mute",
+          "type": 0,
+          "mandatory": true,
+          "rw": 3
+        },
+        {
+          "key": "command",
+          "type": 3,
+          "mandatory": false,
+          "rw": 3
+        }
+      ]
+    },
+    {
+      "type": "x.com.st.mediainputsource",
+      "properties": [
+        {
+          "key": "modes",
+          "type": 8,
+          "mandatory": true,
+          "rw": 3
+        },
+        {
+          "key": "supportedModes",
+          "type": 8,
+          "mandatory": true,
+          "rw": 1
+        }
+      ]
+    },
+    {
+      "type": "x.com.st.mediaplayer",
+      "properties": [
+        {
+          "key": "modes",
+          "type": 8,
+          "mandatory": true,
+          "rw": 3
+        },
+        {
+          "key": "supportedModes",
+          "type": 8,
+          "mandatory": true,
+          "rw": 1
+        }
+      ]
+    },
+    {
+      "type": "x.com.st.mediatrackcontrol",
+      "properties": [
+        {
+          "key": "modes",
+          "type": 8,
+          "mandatory": true,
+          "rw": 3
+        },
+        {
+          "key": "supportedModes",
+          "type": 8,
+          "mandatory": true,
+          "rw": 1
+        }
+      ]
+    },
+    {
+      "type": "x.com.st.mediarepeat",
+      "properties": [
+        {
+          "key": "modes",
+          "type": 8,
+          "mandatory": true,
+          "rw": 3
+        },
+        {
+          "key": "supportedModes",
+          "type": 8,
+          "mandatory": true,
+          "rw": 1
+        }
+      ]
+    },
+    {
+      "type": "x.com.st.mediashuffle",
+      "properties": [
+        {
+          "key": "mode",
+          "type": 3,
+          "mandatory": true,
+          "rw": 3
+        }
+      ]
+    },
+    {
+      "type": "x.com.st.audiotrackdata",
+      "properties": [
+        {
+          "key": "thumbnail",
+          "type": 3,
+          "mandatory": false,
+          "rw": 1
+        },
+        {
+          "key": "trackDescription",
+          "type": 3,
+          "mandatory": false,
+          "rw": 1
+        },
+        {
+          "key": "trackNumber",
+          "type": 1,
+          "mandatory": false,
+          "rw": 1
+        },
+        {
+          "key": "artist",
+          "type": 3,
+          "mandatory": false,
+          "rw": 1
+        },
+        {
+          "key": "album",
+          "type": 3,
+          "mandatory": false,
+          "rw": 1
+        },
+        {
+          "key": "station",
+          "type": 3,
+          "mandatory": false,
+          "rw": 1
+        },
+        {
+          "key": "trackUri",
+          "type": 3,
+          "mandatory": false,
+          "rw": 1
+        },
+        {
+          "key": "title",
+          "type": 3,
+          "mandatory": false,
+          "rw": 1
+        }
+      ]
+    }
+  ],
+  "configuration": {
+    "easySetup": {
+      "connectivity": {
+        "type": 1,
+        "softAP": {
+          "setupId": "001",
+          "artik": false
+        }
+      },
+      "ownershipTransferMethod": 2
+    },
+    "wifi": {
+      "interfaces": 15,
+      "frequency": 1
+    },
+    "filePath": {
+      "svrdb": "artikserversecured.dat",
+      "provisioning": "provisioning.dat",
+      "certificate": "certificate.pem",
+      "privateKey": "privatekey.der"
+    }
+  }
+}
