@@ -24,6 +24,7 @@
 
 // typedef enum {  };
 typedef enum { kSTAsyncGetRequest, kSTAsyncSetRequest, kSTAsyncEnd } STAsync;
+typedef enum { kSTNotifyObserver} STOp;
 
 typedef struct {
   uv_async_t async;
@@ -33,6 +34,7 @@ typedef struct {
 
 typedef struct {
   bool is_init;
+  bool is_loop_lock;
   jerry_value_t jsthings;
   iotjs_sthings_async_t async[kSTAsyncEnd];
   uv_loop_t *loop;
@@ -48,6 +50,14 @@ typedef struct {
   iotjs_string_t pin_data;
   size_t pin_size;
 } iotjs_sthings_pin_data_t;
+
+typedef struct {
+  uv_req_t *request;
+  uv_work_t req;
+  STOp op;
+  bool result;
+  void *data;
+} iotjs_sthings_queue_t;
 
 iotjs_sthings_t *get_sthings_data();
 

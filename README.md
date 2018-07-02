@@ -9,9 +9,26 @@ cd <iot.js project home>
 ```
 
 ## Building
+For Tizen,
 ```bash
 cmake -Bbuild -H.
 make -C build
+```
+
+For TizenRT,
+
+Change your config
+```bash
+cd <your TizenRT path>/os>
+make menuconfig
+# Enable Networking Support -> LwIP options -> IPv6 support
+# Enable Things Management -> SmartThings Things Management
+```
+
+
+```bash
+cd <your TizenRT path>/os
+make IOTJS_ROOT_DIR=../../iotjs IOTJS_BUILD_OPTION="--profile=test/profiles/tizenrt.profile --external-modules=<your smart-things project path> --cmake-param=-DENABLE_MODULE_SMART_THINGS=ON"
 ```
 
 # API
@@ -19,14 +36,14 @@ make -C build
 
 The following table shows SmartThings module APIs available for each platform.
 
-|  | Tizen<br/>(Raspberry Pi) |
-| :---: | :---: |
-| smartthings.start | O |
-| smartthings.stop | O |
-| smartthings.notifyObserver | O |
-| smartthings.reset | O |
-| representaion.set | O |
-| representaion.get | O |
+|  | Tizen<br/>(Raspberry Pi) | TizenRT<br/>(ARTIK 053) |
+| :---: | :---: | :---: |
+| smartthings.start | O | O |
+| smartthings.stop | O | O |
+| smartthings.notifyObserver | O | O |
+| smartthings.reset | O | O |
+| representaion.set | O | O |
+| representaion.get | O | O |
 
 
 ### SmartThings

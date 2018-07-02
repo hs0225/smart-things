@@ -56,18 +56,6 @@ jerry_value_t iotjs_sthings_jget_message_create(
   return jobj;
 }
 
-JS_FUNCTION(GetMessage) {
-  DJS_CHECK_THIS();
-
-  jerry_value_t jthis_obj = JS_GET_THIS();
-  iotjs_sthings_get_message_t* get_msg_obj =
-      iotjs_sthings_get_message_create(jthis_obj);
-
-  init_get_message(jthis_obj, get_msg_obj);
-
-  return jerry_create_undefined();
-}
-
 JS_FUNCTION(HasPropertyKey) {
   DJS_CHECK_THIS();
 

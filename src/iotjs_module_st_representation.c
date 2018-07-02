@@ -60,6 +60,7 @@ static bool req_set_string(const char* key, jerry_value_t jdata,
   iotjs_string_t jvalue_raw = iotjs_jval_as_string(jdata);
   const char* jvalue_string_raw = iotjs_string_data(&jvalue_raw);
 
+  DDDLOG("%s, key(%s), value(%s)", __func__, key, jvalue_string_raw);
   bool ret = st->rep->set_str_value(st->rep, key, jvalue_string_raw);
   iotjs_string_destroy(&jvalue_raw);
 

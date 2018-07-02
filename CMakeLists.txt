@@ -28,6 +28,8 @@ add_definitions("-D__TIZEN__ -DENABLE_DEBUG_LOG")
 
 file(GLOB SRC_DIR src/*.c)
 set(INC_DIR)
+set(GBS_ROOT "~/GBS-ROOT/")
+
 set(GBS_ROOT_USR "~/GBS-ROOT/local/BUILD-ROOTS/scratch.armv7l.0/usr")
 set(GBS_ROOT_IOTJS "~/GBS-ROOT/local/BUILD-ROOTS/scratch.armv7l.0/home/abuild/rpmbuild/BUILD/iotjs-1.0.0")
 

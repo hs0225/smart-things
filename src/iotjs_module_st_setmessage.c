@@ -53,15 +53,3 @@ jerry_value_t iotjs_sthings_jset_message_create(
   init_set_message(jobj, obj);
   return jobj;
 }
-
-JS_FUNCTION(setMessage) {
-  DJS_CHECK_THIS();
-
-  jerry_value_t jthis_obj = JS_GET_THIS();
-  iotjs_sthings_set_message_t* set_msg_obj =
-      iotjs_sthings_set_message_create(jthis_obj);
-
-  init_set_message(jthis_obj, set_msg_obj);
-
-  return jerry_create_undefined();
-}

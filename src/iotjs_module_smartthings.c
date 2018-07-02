@@ -17,13 +17,18 @@
 #include "iotjs_module_st_getmessage.h"
 #include "iotjs_module_st_magic_strings.h"
 #include "iotjs_module_st_setmessage.h"
-#include <app_common.h>
-#include <glib.h>
+
 #include <things_types.h>
 #include <unistd.h>
+#if defined(__TIZEN__)
+#include <app_common.h>
+#include <glib.h>
+#endif
 
 static iotjs_sthings_t sthings_data = {.is_init = false };
+#if defined(__TIZEN__)
 GMainLoop* easysetup_loop;
+#endif
 
 static iotjs_sthings_async_t* request_async_call(void* data,
                                                  uv_async_cb async_cb) {
@@ -61,7 +66,7 @@ iotjs_sthings_t* get_sthings_data() {
  */
 static bool handle_st_request(STAsync op, void* req_msg,
                               st_things_representation_s* resp_rep) {
-  DDDLOG("[ST] %s", __func__);
+  DDDLOG("[ST] %s(%d) IN", __func__, op);
 
   if (!sthings_data.is_init) {
     DLOG("[ST] not initialize");
@@ -80,6 +85,7 @@ static bool handle_st_request(STAsync op, void* req_msg,
 
   IOTJS_RELEASE(req_wrap);
 
+  DDDLOG("[ST] %s OUT", __func__);
   return true;
 }
 
@@ -98,15 +104,16 @@ static void emit_request(const char* event_name, jerry_value_t jmsg,
   jerry_value_t jemit =
       iotjs_jval_get_property(sthings_data.jsthings, IOTJS_MAGIC_STRING_EMIT);
 
-  iotjs_jargs_t jargv = iotjs_jargs_create(3);
-  iotjs_jargs_append_string_raw(&jargv, event_name);
-  iotjs_jargs_append_jval(&jargv, jmsg);
-  iotjs_jargs_append_jval(&jargv, jrep);
+  jerry_value_t jstr = jerry_create_string((const jerry_char_t*)event_name);
+
+  jerry_value_t jargs[] = { jstr, jmsg, jrep };
 
   DDDLOG("[ST] %s, Emit request event(%s)", __func__, event_name);
-  iotjs_jhelper_call(jemit, sthings_data.jsthings, &jargv);
+  jerry_value_t jres =
+      jerry_call_function(jemit, sthings_data.jsthings, jargs, 3);
 
-  iotjs_jargs_destroy(&jargv);
+  jerry_release_value(jres);
+  jerry_release_value(jstr);
   jerry_release_value(jemit);
 }
 
@@ -157,6 +164,7 @@ static void async_set_request_callback(uv_async_t* async) {
   REQUEST_CALLBACK(set, Set, SET)
 }
 
+
 /*
  * Handle reset request
  */
@@ -164,6 +172,7 @@ static void async_reset_request(uv_async_t* async);
 static void async_reset_result(uv_async_t* _async);
 
 bool handle_reset_request(void) {
+  DDDLOG("[ST] %s, ", __func__);
   bool data = true;
   iotjs_sthings_async_t* async =
       request_async_call((void*)&data, async_reset_request);
@@ -172,6 +181,7 @@ bool handle_reset_request(void) {
   DLOG("[ST] Received a reset request: %s", (data ? "true" : "false"));
 
   return data;
+  return false;
 }
 
 static void async_reset_request(uv_async_t* _async) {
@@ -183,9 +193,9 @@ static void async_reset_request(uv_async_t* _async) {
                               IOTJS_ST_MAGIC__RESETREQUEST);
   IOTJS_ASSERT(jerry_value_is_function(jreset_request));
 
-  jerry_value_t jres = iotjs_jhelper_call(jreset_request, sthings_data.jsthings,
-                                          iotjs_jargs_get_empty());
-  IOTJS_ASSERT(!jerry_value_has_error_flag(jres));
+  jerry_value_t jres =
+      jerry_call_function(jreset_request, sthings_data.jsthings, NULL, 0);
+  IOTJS_ASSERT(!jerry_value_is_error(jres));
   bool* data = (bool*)async->data;
 
   *data = iotjs_jval_as_boolean(jres);
@@ -197,6 +207,7 @@ static void async_reset_request(uv_async_t* _async) {
 }
 
 void handle_reset_result(bool result) {
+  DDDLOG("[ST] %s", __func__);
   bool* data = IOTJS_ALLOC(bool);
   *data = result;
   request_async_call((void*)data, async_reset_result);
@@ -209,14 +220,19 @@ static void async_reset_result(uv_async_t* _async) {
   bool* data = async->data;
   jerry_value_t jemit =
       iotjs_jval_get_property(sthings_data.jsthings, IOTJS_MAGIC_STRING_EMIT);
+  IOTJS_ASSERT(jerry_value_is_function(jemit));
+  jerry_value_t jstr =
+      jerry_create_string((const jerry_char_t*)IOTJS_ST_MAGIC_RESETRESULT);
+  jerry_value_t jdata = jerry_create_boolean(*data);
 
-  iotjs_jargs_t jargv = iotjs_jargs_create(2);
-  iotjs_jargs_append_string_raw(&jargv, IOTJS_ST_MAGIC_RESETRESULT);
-  iotjs_jargs_append_bool(&jargv, *data);
+  jerry_value_t jargs[] = { jstr, jdata };
 
-  iotjs_jhelper_call(jemit, sthings_data.jsthings, &jargv);
+  jerry_value_t jres =
+      jerry_call_function(jemit, sthings_data.jsthings, jargs, 2);
 
-  iotjs_jargs_destroy(&jargv);
+  jerry_release_value(jres);
+  jerry_release_value(jdata);
+  jerry_release_value(jstr);
   jerry_release_value(jemit);
 
   IOTJS_RELEASE(async->data);
@@ -229,14 +245,17 @@ static void async_reset_result(uv_async_t* _async) {
 static void async_user_confirm_callback(uv_async_t* async);
 
 bool handle_user_confirm_request(void) {
+  DDDLOG("[ST] %s, ", __func__);
   bool data = true;
   iotjs_sthings_async_t* async =
       request_async_call((void*)&data, async_user_confirm_callback);
-  wait_async_call(async);
 
-  DLOG("[ST] Received a user confirm request: %s", (data ? "true" : "false"));
+  DDDLOG("[ST] Wait a user confirm request");
+  wait_async_call(async);
+  DDDLOG("[ST] Received a user confirm request: %s", (data ? "true" : "false"));
 
   return data;
+  return true;
 }
 
 static void async_user_confirm_callback(uv_async_t* _async) {
@@ -247,9 +266,9 @@ static void async_user_confirm_callback(uv_async_t* _async) {
                               IOTJS_ST_MAGIC__USERCONFIRMREQUEST);
   IOTJS_ASSERT(jerry_value_is_function(juser_confirm));
 
-  jerry_value_t jres = iotjs_jhelper_call(juser_confirm, sthings_data.jsthings,
-                                          iotjs_jargs_get_empty());
-  IOTJS_ASSERT(!jerry_value_has_error_flag(jres));
+  jerry_value_t jres =
+      jerry_call_function(juser_confirm, sthings_data.jsthings, NULL, 0);
+  IOTJS_ASSERT(!jerry_value_is_error(jres));
   bool* data = (bool*)async->data;
 
   *data = iotjs_jval_as_boolean(jres);
@@ -267,12 +286,13 @@ static void async_status_change(uv_async_t* _async);
 void handle_things_status_change(st_things_status_e things_status) {
   DDDLOG("[ST] Things status is changed: %d", things_status);
 
+#if defined(__TIZEN__)
   if (things_status == ES_STATE_REGISTERED_TO_CLOUD) {
     g_main_loop_quit(easysetup_loop);
     g_main_loop_unref(easysetup_loop);
     DDDLOG("[ST] End easy setup loop.");
   }
-
+#endif
   st_things_status_e* status = IOTJS_ALLOC(st_things_status_e);
   *status = things_status;
   request_async_call((void*)status, async_status_change);
@@ -282,25 +302,34 @@ static void async_status_change(uv_async_t* _async) {
   iotjs_sthings_async_t* async = _async->data;
   st_things_status_e* status = async->data;
 
-  DDDLOG("[ST] %s, Emit status change event: %d", __func__, *status);
   jerry_value_t jemit =
       iotjs_jval_get_property(sthings_data.jsthings, IOTJS_MAGIC_STRING_EMIT);
+  IOTJS_ASSERT(jerry_value_is_function(jemit));
+  jerry_value_t str =
+      jerry_create_string((const jerry_char_t*)IOTJS_ST_MAGIC_STATUSCHANGE);
+  jerry_value_t jstatus = jerry_create_number(*status);
+  jerry_value_t jargs[] = { str, jstatus };
 
-  iotjs_jargs_t jargv = iotjs_jargs_create(2);
-  iotjs_jargs_append_string_raw(&jargv, IOTJS_ST_MAGIC_STATUSCHANGE);
-  iotjs_jargs_append_number(&jargv, *status);
-  iotjs_jhelper_call(jemit, sthings_data.jsthings, &jargv);
+  jerry_value_t jres =
+      jerry_call_function(jemit, sthings_data.jsthings, jargs, 2);
 
-  iotjs_jargs_destroy(&jargv);
+  jerry_release_value(str);
+  jerry_release_value(jres);
+  jerry_release_value(jstatus);
   jerry_release_value(jemit);
 
+#if defined(__TIZEN__)
   if (*status == ES_STATE_REGISTERING_TO_CLOUD) {
+    DDDLOG("[ST] %s, gmain loop run", __func__);
     g_main_loop_run(easysetup_loop); // Blocks until loop is quit.
+    DDDLOG("[ST] %s, gmain loop quit", __func__);
   }
+#endif
 
   IOTJS_RELEASE(status);
   close_async_call(async);
 }
+
 /*
  * Handle pin generation
  */
@@ -323,16 +352,25 @@ static void async_pin_generation(uv_async_t* _async) {
   iotjs_sthings_pin_data_t* data = async->data;
   jerry_value_t jemit =
       iotjs_jval_get_property(sthings_data.jsthings, IOTJS_MAGIC_STRING_EMIT);
+  IOTJS_ASSERT(jerry_value_is_function(jemit));
 
-  iotjs_jargs_t jargv = iotjs_jargs_create(3);
-  iotjs_jargs_append_string_raw(&jargv, IOTJS_ST_MAGIC_PINGENERATION);
-  iotjs_jargs_append_string(&jargv, &data->pin_data);
-  iotjs_jargs_append_number(&jargv, (double)data->pin_size);
+  jerry_value_t jstr =
+      jerry_create_string((const jerry_char_t*)IOTJS_ST_MAGIC_PINGENERATION);
+  jerry_value_t jpin_data = jerry_create_string(
+      (const jerry_char_t*)iotjs_string_data(&data->pin_data));
+  jerry_value_t jpin_size = jerry_create_number(data->pin_size);
 
-  iotjs_jhelper_call(jemit, sthings_data.jsthings, &jargv);
+  jerry_value_t jargs[] = { jstr, jpin_data, jpin_size };
 
-  iotjs_jargs_destroy(&jargv);
+  jerry_value_t jres =
+      jerry_call_function(jemit, sthings_data.jsthings, jargs, 3);
+
+  jerry_release_value(jstr);
+  jerry_release_value(jpin_data);
+  jerry_release_value(jpin_size);
+  jerry_release_value(jres);
   jerry_release_value(jemit);
+
   iotjs_string_destroy(&data->pin_data);
 
   IOTJS_RELEASE(async->data);
@@ -340,9 +378,9 @@ static void async_pin_generation(uv_async_t* _async) {
 }
 
 void handle_things_pin_display_close() {
-  DDDLOG("[ST] %s - %d", __func__);
+  DDDLOG("[ST] %s", __func__);
 
-  request_async_call(NULL, async_pin_display_close);
+  // request_async_call(NULL, async_pin_display_close);
 }
 
 static void async_pin_display_close(uv_async_t* _async) {
@@ -350,16 +388,48 @@ static void async_pin_display_close(uv_async_t* _async) {
   jerry_value_t jemit =
       iotjs_jval_get_property(sthings_data.jsthings, IOTJS_MAGIC_STRING_EMIT);
 
-  iotjs_jargs_t jargv = iotjs_jargs_create(1);
-  iotjs_jargs_append_string_raw(&jargv, IOTJS_ST_MAGIC_PINDISPLAYCLOSE);
+  jerry_value_t jstr =
+      jerry_create_string((const jerry_char_t*)IOTJS_ST_MAGIC_PINDISPLAYCLOSE);
+  jerry_value_t jargs[] = { jstr };
 
-  iotjs_jhelper_call(jemit, sthings_data.jsthings, &jargv);
+  jerry_value_t jres =
+      jerry_call_function(jemit, sthings_data.jsthings, jargs, 1);
 
-  iotjs_jargs_destroy(&jargv);
+  jerry_release_value(jres);
+  jerry_release_value(jstr);
   jerry_release_value(jemit);
 
   IOTJS_RELEASE(async->data);
   close_async_call(async);
+}
+
+/*
+ * Worker
+ */
+static void st_worker(uv_work_t* work_req) {
+  iotjs_sthings_queue_t* req_wrap = (iotjs_sthings_queue_t*)work_req->data;
+  STOp op = req_wrap->op;
+  DDDLOG("[ST] %s, operation(%d)", __func__, op);
+
+  if (op == kSTNotifyObserver) {
+    if (st_things_notify_observers(req_wrap->data) != ST_THINGS_ERROR_NONE) {
+      DLOG("[ST] Failed notifyObservers");
+      req_wrap->result = false;
+    } else {
+      req_wrap->result = true;
+    }
+  }
+}
+
+static void st_after_worker(uv_work_t* work_req, int status) {
+  iotjs_sthings_queue_t* req_wrap = (iotjs_sthings_queue_t*)work_req->data;
+  STOp op = req_wrap->op;
+
+  if (op == kSTNotifyObserver) {
+    IOTJS_RELEASE(req_wrap->data);
+  }
+
+  IOTJS_RELEASE(req_wrap);
 }
 
 
@@ -369,13 +439,14 @@ static bool init_things(const char* json_path) {
     DDLOG("[ST] Already initialized!!");
     return false;
   }
-
+  bool easysetup_complete = false;
+#if defined(__TIZEN__)
   char app_json_path[128] = {
     0,
   };
   char* app_res_path = NULL;
   char* app_data_path = NULL;
-  bool easysetup_complete = false;
+
 
   app_res_path = app_get_resource_path();
   if (!app_res_path) {
@@ -405,7 +476,11 @@ static bool init_things(const char* json_path) {
   free(app_res_path);
   free(app_data_path);
 
+
   int res = st_things_initialize(app_json_path, &easysetup_complete);
+#elif defined(__TIZENRT__)
+  int res = st_things_initialize(json_path, &easysetup_complete);
+#endif
   if (res != 0) {
     DLOG("[ST] st_things_initialize failed(%d)!!", res);
     return false;
@@ -420,7 +495,12 @@ static bool init_things(const char* json_path) {
   st_things_register_pin_handling_cb(handle_pin_generation,
                                      handle_things_pin_display_close);
 
-  st_things_start();
+  if (st_things_start() == ST_THINGS_ERROR_NONE) {
+    DDDLOG("[ST] %s, === Start Smart Things Stack ===", __func__);
+  } else {
+    DLOG("[ST] %s, !!! Cannot start Smart Things Stack !!!");
+    return false;
+  }
 
   return true;
 }
@@ -430,12 +510,20 @@ JS_FUNCTION(SmartThings) {
   sthings_data.jsthings = JS_GET_THIS();
   sthings_data.loop = iotjs_environment_loop(iotjs_environment_get());
 
+  st_things_register_request_cb(handle_st_get_request, handle_st_set_request);
+  st_things_register_reset_cb(handle_reset_request, handle_reset_result);
+  st_things_register_user_confirm_cb(handle_user_confirm_request);
+  st_things_register_things_status_change_cb(handle_things_status_change);
+  st_things_register_pin_handling_cb(handle_pin_generation,
+                                     handle_things_pin_display_close);
+
   return jerry_create_undefined();
 }
 
 JS_FUNCTION(Start) {
   DJS_CHECK_ARGS(1, object);
-  DLOG("[ST] %s, Start SmartThings", __func__);
+  DDDLOG("[ST] %s, Start SmartThings", __func__);
+  sthings_data.is_init = true;
 
   // Initialize uv-async
   uv_loop_t* iotjs_loop = iotjs_environment_loop(iotjs_environment_get());
@@ -455,26 +543,32 @@ JS_FUNCTION(Start) {
       iotjs_jval_get_property(jconfig, IOTJS_ST_MAGIC_DEVICEDEFINITION);
 
   iotjs_string_t path = iotjs_jval_as_string(jdeviceDefinition);
-
+#if defined(__TIZEN__)
   easysetup_loop = g_main_loop_new(g_main_context_default(), FALSE);
+#endif
+
   init_things(iotjs_string_data(&path));
 
   jerry_release_value(jdeviceDefinition);
   iotjs_string_destroy(&path);
 
-  sthings_data.is_init = true;
-
   return jerry_create_undefined();
 }
 
 JS_FUNCTION(GetResPath) {
+#if defined(__TIZEN__)
   return jerry_create_string((const jerry_char_t*)app_get_resource_path());
+#else
+  return jerry_create_undefined();
+#endif
 }
 
 JS_FUNCTION(Stop) {
   DLOG("[ST] %s, Stop Smart Things\n", __func__);
   st_things_deinitialize();
+#if defined(__TIZEN__)
   st_things_stop();
+#endif
 
   jerry_release_value(sthings_data.jsthings);
 
@@ -492,10 +586,20 @@ JS_FUNCTION(Stop) {
 JS_FUNCTION(NotifyObservers) {
   DJS_CHECK_THIS();
   DJS_CHECK_ARGS(1, string);
-
   iotjs_string_t res = JS_GET_ARG(0, string);
+  const char *data = iotjs_string_data(&res);
 
-  st_things_notify_observers(iotjs_string_data(&res));
+  iotjs_sthings_queue_t* queue_wrap = IOTJS_ALLOC(iotjs_sthings_queue_t);
+  queue_wrap->op = kSTNotifyObserver;
+  size_t data_length = strlen(data);
+  queue_wrap->data = IOTJS_CALLOC(data_length + 1, char);
+  strncpy(queue_wrap->data, data, data_length + 1);
+
+  queue_wrap->request = (uv_req_t*)&queue_wrap->req;
+  queue_wrap->request->data = queue_wrap;
+
+  uv_loop_t* loop = iotjs_environment_loop(iotjs_environment_get());
+  uv_queue_work(loop, &queue_wrap->req, st_worker, st_after_worker);
 
   iotjs_string_destroy(&res);
   return jerry_create_undefined();
@@ -527,4 +631,6 @@ jerry_value_t init_smartthings_native() {
   return smart_things;
 }
 
+#if defined(__TIZEN__)
 IOTJS_MODULE(IOTJS_CURRENT_MODULE_VERSION, 1, smartthings_native);
+#endif

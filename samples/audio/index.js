@@ -14,7 +14,6 @@
  */
 
 var st = require('smartthings');
-var http = require('http');
 
 var SWITCH = '/capability/switch/main/0';
 var AUDIOVOLUME = '/capability/audioVolume/main/0';
@@ -26,58 +25,13 @@ var MEDIAPLAYBACKSHUFFLE = '/capability/mediaPlaybackShuffle/main/0';
 var AUDIOTRACKDATA = '/capability/audioTrackData/main/0';
 
 /*
-  * Server
-**/
-var logCount = 0;
-var serverLog = {
-  logs: [],
-};
-function pushLog(data) {
-  serverLog.logs.push({
-    S: logCount++,
-    C: data,
-  });
-}
-
-function getLogString() {
-  return JSON.stringify(serverLog);
-}
-
-function clearLog() {
-  serverLog.logs = [];
-}
-
-http.createServer(function(req, res) {
-  req.on('end', function() {
-    var msg;
-
-    msg = getLogString();
-    clearLog();
-
-    res.writeHead(200, {
-      'Connection': 'close',
-      'Content-Length': msg.length,
-      'Content-Type': 'text/plain',
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET',
-      'Access-Control-Allow-Headers:':
-        'Origin, X-Requested-With, Content-Type, Accept',
-    });
-
-    res.end(msg);
-  });
-}).listen(5696).on('error', function(e) {
-  console.log(e);
-});
-
-
-/*
   * Smart Things
 **/
 var gSwitch = false;
 var gVolume = 50;
 
 st.start({deviceDefinition: "device_def.json"});
+st.loopStart();
 
 st.on('getRequest', getRequest);
 st.on('setRequest', setRequest);

@@ -1,0 +1,14 @@
+{
+  "modules": {
+    "smart_things": {
+      "native_files": ["src/iotjs_module_smartthings.c",
+                      "src/iotjs_module_st_representation.c",
+                      "src/iotjs_module_st_getmessage.c",
+                      "src/iotjs_module_st_setmessage.c"],
+      "js_file": "src/js/index.js",
+      "init": "init_smartthings_native",
+      "cmakefile": "module.cmake",
+      "require": ["events", "util"]
+    }
+  }
+}
